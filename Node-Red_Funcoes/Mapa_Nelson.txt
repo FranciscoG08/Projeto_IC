@@ -1,0 +1,22 @@
+var dados = msg.payload;
+var alerta = String(dados.alerta).toLowerCase() === "true";
+var localizacoes = flow.get("localizacoes") || {};
+var loc = localizacoes["nelson"] || { lat: 0, lon: 0 };
+
+if (alerta) {
+    msg.payload = {
+        name: "incendio-nelson_Zona2",
+        lat: loc.lat,
+        lon: loc.lon,
+        icon: "fa-fire",
+        layer: "incendios"
+    };
+} else {
+    msg.payload = {
+        name: "incendio-nelson_Zona2",
+        deleted: true,
+        layer: "incendios"
+    };
+}
+
+return msg;

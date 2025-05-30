@@ -1,0 +1,45 @@
+var dados = msg.payload;
+var markers = [];
+
+if (dados.success && Array.isArray(dados.data)) {
+    for (var i = 0; i < dados.data.length; i++) {
+        var fire = dados.data[i];
+        if (fire.active && fire.lat && fire.lng) {
+            var icon = "fa-question";
+            var color = "gray";
+
+            switch (fire.status) {
+                case "Início":
+                case "Despacho de 1º Alerta":
+                case "Chegada ao TO":
+                case "Despacho":
+                    icon = "fa-fire";
+                    color = "orange";
+                    break;
+                case "Em Curso":
+                    icon = "fa-fire";
+                    color = "red";
+                    break;
+                case "Conclusão":
+                case "Vigilância":
+                case "Em Resolução":
+                    icon = "fa-fire-extinguisher";
+                    color = "green";
+                    break;
+            }
+
+            markers.push({
+                name: "incendio-" + fire.id,
+                local: fire.location,
+                lat: fire.lat,
+                lon: fire.lng,
+                icon: icon,
+                iconColor: color,
+                layer: "incendios"
+            });
+        }
+    }
+}
+
+msg.payload = markers;
+return msg;

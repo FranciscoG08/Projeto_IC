@@ -1,0 +1,8 @@
+var dados = msg.payload;
+if (dados._type === "location") {
+    var id = msg.topic.split("/")[2]; // Pode ter 2 valores
+    var localizacoes = flow.get("localizacoes") || {};
+    localizacoes[id] = { lat: dados.lat, lon: dados.lon };
+    flow.set("localizacoes", localizacoes);
+}
+return null;

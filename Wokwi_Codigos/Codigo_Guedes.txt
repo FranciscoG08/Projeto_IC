@@ -1,0 +1,90 @@
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include "DHT.h"
+
+#define DHTPIN 15
+#define DHTTYPE DHT22
+
+#define LED_PIN 2
+#define BUZZER_PIN 4
+#define MQ2_PIN 34
+
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+
+const char* mqtt_server = "broker.emqx.io";
+
+const char* mqtt_topic = "guedes/alerta_incendio";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup_wifi() {
+  delay(10);
+  Serial.println("Conectando ao WiFi...");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+
+    Serial.print(".");
+  }
+  Serial.println("WiFi conectado! IP: " + WiFi.localIP().toString());
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Conectando ao MQTT...");
+    String clientId = "ESP32-Fire-Guedes-";
+    clientId += String(random(0xffff), HEX);
+    if (client.connect(clientId.c_str())) {
+      Serial.println("Conectado ao MQTT.");
+    } else {
+      Serial.print("Falhou, rc=");
+      Serial.print(client.state());
+      Serial.println(" Tentando novamente em 5 segundos...");
+      delay(5000);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+
+  dht.begin();
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
+}
+
+void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  float temperatura = dht.readTemperature();
+  float humidade = dht.readHumidity();
+  int mq2_analog = analogRead(MQ2_PIN);
+
+  bool alerta = (temperatura > 50.0 || mq2_analog > 1564); // Valor 0.8
+
+  digitalWrite(LED_PIN, alerta);
+  digitalWrite(BUZZER_PIN, alerta);
+
+  // Mensagem JSON
+  String mensagem = "{";
+  mensagem += "\"temperatura\":" + String(temperatura, 1) + ",";
+  mensagem += "\"humidade\":" + String(humidade, 1) + ",";
+  mensagem += "\"ppm\":" + String(mq2_analog) + ",";
+  mensagem += "\"alerta\":" + String(alerta ? "true" : "false");
+  mensagem += "}";
+
+  Serial.println(mensagem);
+  client.publish(mqtt_topic, mensagem.c_str());
+
+  delay(5000);
+}

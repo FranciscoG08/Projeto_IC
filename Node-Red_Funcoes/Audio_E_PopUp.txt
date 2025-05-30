@@ -1,0 +1,24 @@
+var dados = msg.payload;
+var fogosAtivosAnteriores = flow.get("fogosAtivos") || [];
+var fogosAtivosAtuais = [];
+var novosFogos = [];
+
+if (dados.success && Array.isArray(dados.data)) {
+    for (let i = 0; i < dados.data.length; i++) {
+        let fogo = dados.data[i];
+        if (fogo.active && fogo.lat && fogo.lng) {
+            fogosAtivosAtuais.push(fogo.id);
+
+            if (!fogosAtivosAnteriores.includes(fogo.id)) {
+                novosFogos.push(fogo);
+            }
+        }
+    }
+}
+flow.set("fogosAtivos", fogosAtivosAtuais);
+if (novosFogos.length > 0) {
+    let fogoNovo = novosFogos[0];
+    msg.payload = "Novo fogo em " + fogoNovo.location;
+    return msg;
+}
+return null;

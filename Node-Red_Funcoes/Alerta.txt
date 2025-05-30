@@ -1,0 +1,2 @@
+msg.payload = msg.payload.alerta ? "🚨 Alerta de Incêndio!" : "✅ Tudo normal";
+return msg;

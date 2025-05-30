@@ -1,0 +1,14 @@
+var dados = msg.payload;
+var totalTerrestre = 0;
+
+if (dados.success && Array.isArray(dados.data)) {
+    for (var i = 0; i < dados.data.length; i++) {
+        var fire = dados.data[i];
+        if (fire.active) {
+            totalTerrestre += fire.terrain || 0;
+        }
+    }
+}
+msg.measurement = "Meios_Terrestes";
+msg.payload = totalTerrestre;
+return msg;

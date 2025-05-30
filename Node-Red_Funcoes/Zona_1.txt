@@ -1,0 +1,8 @@
+msg.measurement = "Zona1",
+msg.payload = 
+  {
+      temperatura: msg.payload.temperatura,
+      humidade: msg.payload.humidade,
+      ppm: msg.payload.ppm
+  };
+return msg;
